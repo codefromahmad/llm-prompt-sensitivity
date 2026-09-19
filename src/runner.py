@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -13,6 +14,20 @@ from .data import dataset_provenance, load_questions, normalise_example
 from .evaluation import extract_answer
 from .model import generate_response, load_model_and_tokenizer
 from .prompts import PROMPT_VARIANTS, format_prompt
+
+
+def git_commit_hash() -> str | None:
+    """Return the checked-out commit when the runner is launched from a Git clone."""
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return completed.stdout.strip()
 
 
 def run(pilot: bool) -> pd.DataFrame:
@@ -44,9 +59,21 @@ def run(pilot: bool) -> pd.DataFrame:
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "pilot": pilot,
         "expected_generations": len(rows) * len(PROMPT_VARIANTS),
+        "actual_sample_size": len(rows),
+        "actual_generations": len(records),
         "config": config.as_dict(),
+        "generation_configuration": {
+            "do_sample": config.do_sample,
+            "max_new_tokens": config.max_new_tokens,
+            "enable_thinking": config.enable_thinking,
+        },
+        "prompt_variants": [
+            {"identifier": variant.identifier, "label": variant.label, "instruction": variant.instruction}
+            for variant in PROMPT_VARIANTS
+        ],
         "dataset_provenance": dataset_provenance(sampled_dataset),
         "sampled_question_ids": [row["question_id"] for row in rows],
+        "git_commit": git_commit_hash(),
     }
     (output_dir / "run_metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     (output_dir / "sampled_question_ids.json").write_text(

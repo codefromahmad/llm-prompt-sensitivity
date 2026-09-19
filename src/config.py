@@ -18,6 +18,7 @@ class ExperimentConfig:
     seed: int = 42
     max_new_tokens: int = 64
     do_sample: bool = False
+    enable_thinking: bool = False
     device_map: str = "auto"
     output_dir: str = "outputs"
 
@@ -25,7 +26,7 @@ class ExperimentConfig:
         return self.pilot_sample_size if pilot else self.final_sample_size
 
     def output_path(self, pilot: bool) -> Path:
-        mode = "pilot" if pilot else "full"
+        mode = "pilot" if pilot else "final"
         return Path(self.output_dir) / mode
 
     def as_dict(self) -> dict:

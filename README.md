@@ -45,17 +45,21 @@ Results are written to `outputs/pilot/`:
 
 Each generation record contains `question_id`, `prompt_variant`, `question`, `choices`, `ground_truth`, `raw_response`, `predicted_answer`, `correct`, `generated_tokens`, and `inference_time` (seconds).
 
-To run the planned 300-question experiment only when authorized:
+To run the frozen 300-question final experiment only when authorized:
 
 ```bash
 PYTHONPATH=. python -m src.runner --full
 ```
+
+This creates exactly 1,500 records in `outputs/final/` (300 questions × 5 variants), leaving pilot directories untouched. Its metadata records the centralized configuration, prompt definitions, thinking setting, dataset provenance, sampled IDs, and Git commit when available.
 
 ## Google Colab (T4 GPU)
 
 When local storage is insufficient for the model weights, run the same pilot in Google Colab with a T4 GPU. Open [`notebooks/colab_pilot.ipynb`](notebooks/colab_pilot.ipynb) in Colab, select **Runtime → Change runtime type → T4 GPU**, set `REPO_URL` to your GitHub repository URL, and run the cells in order.
 
 The notebook clones the repository, installs `requirements.txt`, verifies CUDA, runs `pytest`, executes **only** `python -m src.runner --pilot`, runs the existing analysis scripts, and downloads a zip of `outputs/pilot/`. It invokes the same centralized configuration and modules as a local run: seed 42, Qwen3-1.7B, thinking disabled, greedy decoding, and a 64-token generation cap. It never invokes `--full`.
+
+For the frozen final run, use `notebooks/colab_final.ipynb`. It has a deliberate `RUN_FINAL = False` safety gate: you must change it to `True`, then execute the cell containing the explicit `python -m src.runner --full` command. It verifies 1,500 records and packages only `outputs/final/` for download.
 
 ## Analyze completed runs
 
@@ -64,7 +68,7 @@ PYTHONPATH=. python scripts/analyze.py outputs/pilot/generations.jsonl
 PYTHONPATH=. python scripts/plot_results.py outputs/pilot/generations.jsonl
 ```
 
-These write summary CSVs, per-question prediction-disagreement data, and an accuracy plot. They never create results on their own.
+These write per-prompt accuracy/valid-answer summaries, per-question unique-prediction and invalidity data, all-five consistency/non-null disagreement counts, P1-relative correctness flips, and an accuracy plot. They never create model results on their own.
 
 ## Answer extraction
 

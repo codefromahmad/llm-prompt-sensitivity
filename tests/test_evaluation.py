@@ -1,4 +1,6 @@
-from src.evaluation import extract_answer
+import pandas as pd
+
+from src.evaluation import extract_answer, p1_correctness_flips
 
 
 def test_extracts_exact_answer():
@@ -46,3 +48,15 @@ def test_rejects_ambiguous_answer():
 
 def test_rejects_no_answer():
     assert extract_answer("I cannot determine the answer.") is None
+
+
+def test_p1_correctness_flips():
+    results = pd.DataFrame([
+        {"question_id": "q1", "prompt_variant": "P1", "correct": True},
+        {"question_id": "q2", "prompt_variant": "P1", "correct": False},
+        {"question_id": "q1", "prompt_variant": "P2", "correct": False},
+        {"question_id": "q2", "prompt_variant": "P2", "correct": True},
+    ])
+    flips = p1_correctness_flips(results).set_index("prompt_variant")
+    assert flips.loc["P2", "correct_to_incorrect"] == 1
+    assert flips.loc["P2", "incorrect_to_correct"] == 1

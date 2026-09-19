@@ -29,7 +29,7 @@ def generate_response(model, tokenizer, prompt: str, config: ExperimentConfig) -
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=False,
+        enable_thinking=config.enable_thinking,
     )
     inputs = tokenizer([rendered], return_tensors="pt").to(model.device)
     started = time.perf_counter()

@@ -52,3 +52,20 @@ def question_disagreement(results: pd.DataFrame) -> pd.DataFrame:
     return (results.groupby("question_id", as_index=False)
             .agg(n_unique_predictions=("predicted_answer", lambda x: x.dropna().nunique()),
                  any_invalid=("predicted_answer", lambda x: x.isna().any())))
+
+
+def p1_correctness_flips(results: pd.DataFrame) -> pd.DataFrame:
+    """Count correctness changes for each variant against P1 on shared questions."""
+    import pandas as pd
+
+    baseline = results[results["prompt_variant"] == "P1"].set_index("question_id")["correct"]
+    rows = []
+    for variant in sorted(set(results["prompt_variant"]) - {"P1"}):
+        comparison = results[results["prompt_variant"] == variant].set_index("question_id")["correct"]
+        aligned_baseline, aligned_comparison = baseline.align(comparison, join="inner")
+        rows.append({
+            "prompt_variant": variant,
+            "correct_to_incorrect": int((aligned_baseline & ~aligned_comparison).sum()),
+            "incorrect_to_correct": int((~aligned_baseline & aligned_comparison).sum()),
+        })
+    return pd.DataFrame(rows)
