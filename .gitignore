@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Experiment outputs and large local assets
+data/
+outputs/
+checkpoints/
+models/
+wandb/
+
+# Environment and editor files
+.env
+.DS_Store
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
