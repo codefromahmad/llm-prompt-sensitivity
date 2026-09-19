@@ -9,6 +9,13 @@ if TYPE_CHECKING:
     import pandas as pd
 
 VALID_ANSWERS = frozenset("ABCDE")
+PREDICTION_STABILITY_CATEGORIES = (
+    "All five valid, same answer",
+    "All five valid, ≥2 answers",
+    "≥1 invalid, ≥2 valid answers",
+    "≥1 invalid, one valid answer",
+    "All predictions invalid",
+)
 _STRICT = re.compile(r"^\s*\(?\s*([A-E])\s*\)?(?:\s*[\.!,:;]?\s*)$", re.IGNORECASE)
 _ANSWER_CUE = re.compile(
     r"(?:final\s+)?(?:answer|option|choice|letter)\s*(?:is|:)?\s*(?:[*_`]+\s*)*\(?\s*([A-E])\b",
@@ -52,6 +59,44 @@ def question_disagreement(results: pd.DataFrame) -> pd.DataFrame:
     return (results.groupby("question_id", as_index=False)
             .agg(n_unique_predictions=("predicted_answer", lambda x: x.dropna().nunique()),
                  any_invalid=("predicted_answer", lambda x: x.isna().any())))
+
+
+def prediction_stability_summary(results: pd.DataFrame) -> pd.DataFrame:
+    """Summarize per-question answer stability while keeping nulls distinct.
+
+    A question is stable only when all five extracted predictions are valid and
+    identical. Questions containing one or more null extractions are reported
+    separately, according to whether their remaining valid predictions agree.
+    """
+    import pandas as pd
+
+    rows = []
+    for _, group in results.groupby("question_id", sort=False):
+        predictions = group["predicted_answer"]
+        valid_predictions = predictions.dropna()
+        valid_count = int(valid_predictions.size)
+        unique_valid_predictions = int(valid_predictions.nunique())
+        if valid_count == len(predictions) and unique_valid_predictions == 1:
+            category = PREDICTION_STABILITY_CATEGORIES[0]
+        elif valid_count == len(predictions):
+            category = PREDICTION_STABILITY_CATEGORIES[1]
+        elif unique_valid_predictions > 1:
+            category = PREDICTION_STABILITY_CATEGORIES[2]
+        elif valid_count == 0:
+            category = PREDICTION_STABILITY_CATEGORIES[4]
+        else:
+            category = PREDICTION_STABILITY_CATEGORIES[3]
+        rows.append({"category": category})
+
+    counts = pd.DataFrame(rows).value_counts("category").reindex(
+        PREDICTION_STABILITY_CATEGORIES, fill_value=0
+    )
+    total_questions = int(counts.sum())
+    return pd.DataFrame({
+        "category": counts.index,
+        "question_count": counts.values,
+        "percentage": 100 * counts.values / total_questions,
+    })
 
 
 def p1_correctness_flips(results: pd.DataFrame) -> pd.DataFrame:

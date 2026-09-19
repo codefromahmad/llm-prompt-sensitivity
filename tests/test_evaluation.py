@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.evaluation import extract_answer, p1_correctness_flips
+from src.evaluation import extract_answer, p1_correctness_flips, prediction_stability_summary
 
 
 def test_extracts_exact_answer():
@@ -60,3 +60,27 @@ def test_p1_correctness_flips():
     flips = p1_correctness_flips(results).set_index("prompt_variant")
     assert flips.loc["P2", "correct_to_incorrect"] == 1
     assert flips.loc["P2", "incorrect_to_correct"] == 1
+
+
+def test_prediction_stability_summary_keeps_invalid_answers_distinct():
+    predictions = {
+        "stable": ["A", "A", "A", "A", "A"],
+        "different": ["A", "B", "A", "A", "A"],
+        "invalid_and_different": ["A", None, "B", "A", "A"],
+        "invalid_and_identical": ["A", None, "A", "A", "A"],
+        "all_invalid": [None, None, None, None, None],
+    }
+    results = pd.DataFrame([
+        {"question_id": question_id, "prompt_variant": f"P{index + 1}", "predicted_answer": prediction}
+        for question_id, answers in predictions.items()
+        for index, prediction in enumerate(answers)
+    ])
+    summary = prediction_stability_summary(results).set_index("category")
+    assert summary["question_count"].to_dict() == {
+        "All five valid, same answer": 1,
+        "All five valid, ≥2 answers": 1,
+        "≥1 invalid, ≥2 valid answers": 1,
+        "≥1 invalid, one valid answer": 1,
+        "All predictions invalid": 1,
+    }
+    assert summary["percentage"].sum() == 100.0
