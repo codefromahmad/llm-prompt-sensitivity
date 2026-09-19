@@ -8,6 +8,7 @@ def test_extracts_exact_answer():
 def test_extracts_answer_with_punctuation():
     assert extract_answer("(C)") == "C"
     assert extract_answer("C.") == "C"
+    assert extract_answer("C)") == "C"
 
 
 def test_extracts_labelled_answer():
@@ -16,6 +17,18 @@ def test_extracts_labelled_answer():
 
 def test_extracts_sentence_answer():
     assert extract_answer("The answer is C") == "C"
+
+
+def test_extracts_leading_answer_before_explanation():
+    assert extract_answer("C. talented\n\nA person who is good at sports is typically considered talented.") == "C"
+    assert extract_answer("C) Explanation: a person may be talented.") == "C"
+    assert extract_answer("(C) Explanation: a person who is good at sports is talented.") == "C"
+    assert extract_answer("A. Explanation: a person may be talented.") == "A"
+    assert extract_answer("C\nExplanation: A person may be talented.") == "C"
+
+
+def test_extracts_final_answer_cue():
+    assert extract_answer("Final answer: C") == "C"
 
 
 def test_extracts_one_standalone_letter():

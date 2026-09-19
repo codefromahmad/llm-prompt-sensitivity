@@ -11,7 +11,7 @@ Research question: **How sensitive is a small language model to semantically equ
 - Final sample: 300 questions, selected through one seeded shuffle (`seed=42`)
 - Pilot: first 10 questions from that same 300-question ordering
 - Variants: five fixed instructions (`P1`–`P5`)
-- Decoding: greedy (`do_sample=False`), `max_new_tokens=16`
+- Decoding: greedy (`do_sample=False`), `max_new_tokens=64`
 - Qwen thinking: explicitly disabled with `enable_thinking=False`
 - Constant conditions: the model, sampled questions, choices/question formatting, decoding configuration, answer extraction, and evaluation code are shared by every variant.
 
@@ -55,7 +55,7 @@ PYTHONPATH=. python -m src.runner --full
 
 When local storage is insufficient for the model weights, run the same pilot in Google Colab with a T4 GPU. Open [`notebooks/colab_pilot.ipynb`](notebooks/colab_pilot.ipynb) in Colab, select **Runtime → Change runtime type → T4 GPU**, set `REPO_URL` to your GitHub repository URL, and run the cells in order.
 
-The notebook clones the repository, installs `requirements.txt`, verifies CUDA, runs `pytest`, executes **only** `python -m src.runner --pilot`, runs the existing analysis scripts, and downloads a zip of `outputs/pilot/`. It invokes the same centralized configuration and modules as a local run: seed 42, Qwen3-1.7B, thinking disabled, greedy decoding, and 16 generated tokens. It never invokes `--full`.
+The notebook clones the repository, installs `requirements.txt`, verifies CUDA, runs `pytest`, executes **only** `python -m src.runner --pilot`, runs the existing analysis scripts, and downloads a zip of `outputs/pilot/`. It invokes the same centralized configuration and modules as a local run: seed 42, Qwen3-1.7B, thinking disabled, greedy decoding, and a 64-token generation cap. It never invokes `--full`.
 
 ## Analyze completed runs
 

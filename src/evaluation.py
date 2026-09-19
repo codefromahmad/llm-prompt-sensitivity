@@ -10,7 +10,11 @@ if TYPE_CHECKING:
 
 VALID_ANSWERS = frozenset("ABCDE")
 _STRICT = re.compile(r"^\s*\(?\s*([A-E])\s*\)?(?:\s*[\.!,:;]?\s*)$", re.IGNORECASE)
-_ANSWER_CUE = re.compile(r"(?:answer|option|choice|letter)\s*(?:is|:)?\s*\(?\s*([A-E])\b", re.IGNORECASE)
+_ANSWER_CUE = re.compile(r"(?:final\s+)?(?:answer|option|choice|letter)\s*(?:is|:)?\s*\(?\s*([A-E])\b", re.IGNORECASE)
+_LEADING_ANSWER = re.compile(
+    r"^\s*(?:\(\s*([A-E])\s*\)|([A-E])\s*[\.)]|([A-E])(?=\s*[\r\n]+))(?=\s|$)",
+    re.IGNORECASE,
+)
 _STANDALONE = re.compile(r"\b([A-E])\b", re.IGNORECASE)
 
 
@@ -23,6 +27,9 @@ def extract_answer(raw_response: str) -> str | None:
     if cue_matches:
         unique_cues = {item.upper() for item in cue_matches}
         return next(iter(unique_cues)) if len(unique_cues) == 1 else None
+    leading = _LEADING_ANSWER.match(raw_response)
+    if leading:
+        return next(item.upper() for item in leading.groups() if item is not None)
     standalone = _STANDALONE.findall(raw_response)
     unique = {item.upper() for item in standalone}
     return next(iter(unique)) if len(unique) == 1 else None

@@ -16,7 +16,7 @@ class ExperimentConfig:
     final_sample_size: int = 300
     pilot_sample_size: int = 10
     seed: int = 42
-    max_new_tokens: int = 16
+    max_new_tokens: int = 64
     do_sample: bool = False
     device_map: str = "auto"
     output_dir: str = "outputs"
