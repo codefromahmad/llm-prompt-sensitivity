@@ -31,6 +31,11 @@ def test_extracts_final_answer_cue():
     assert extract_answer("Final answer: C") == "C"
 
 
+def test_extracts_markdown_formatted_explicit_answer_cue():
+    assert extract_answer("The correct answer is **D. city or town**.") == "D"
+    assert extract_answer("The most logical choice is **A") == "A"
+
+
 def test_extracts_one_standalone_letter():
     assert extract_answer("I select B") == "B"
 

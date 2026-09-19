@@ -5,6 +5,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import matplotlib
+
+# This script is designed for non-interactive environments (for example Colab
+# and CI), where the macOS GUI backend can fail or hang during font setup.
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -19,10 +24,17 @@ def main() -> None:
     args = parser.parse_args()
     summary = variant_summary(pd.read_json(args.results, lines=True))
     sns.set_theme(style="whitegrid")
-    axis = sns.barplot(data=summary, x="prompt_variant", y="accuracy", hue="prompt_variant", legend=False)
+    axis = sns.barplot(data=summary, x="prompt_variant", y="accuracy", color="C0")
     axis.set(xlabel="Prompt variant", ylabel="Accuracy", ylim=(0, 1), title="CommonsenseQA accuracy by prompt wording")
-    for container in axis.containers:
-        axis.bar_label(container, labels=[f"{value:.1%}" for value in summary.accuracy], padding=3)
+    for bar, accuracy in zip(axis.patches, summary["accuracy"]):
+        axis.annotate(
+            f"{accuracy:.1%}",
+            (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+            ha="center",
+            va="bottom",
+            xytext=(0, 3),
+            textcoords="offset points",
+        )
     figure = axis.get_figure()
     figure.tight_layout()
     output = args.output or args.results.parent / "accuracy_by_variant.png"

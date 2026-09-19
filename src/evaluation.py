@@ -10,7 +10,10 @@ if TYPE_CHECKING:
 
 VALID_ANSWERS = frozenset("ABCDE")
 _STRICT = re.compile(r"^\s*\(?\s*([A-E])\s*\)?(?:\s*[\.!,:;]?\s*)$", re.IGNORECASE)
-_ANSWER_CUE = re.compile(r"(?:final\s+)?(?:answer|option|choice|letter)\s*(?:is|:)?\s*\(?\s*([A-E])\b", re.IGNORECASE)
+_ANSWER_CUE = re.compile(
+    r"(?:final\s+)?(?:answer|option|choice|letter)\s*(?:is|:)?\s*(?:[*_`]+\s*)*\(?\s*([A-E])\b",
+    re.IGNORECASE,
+)
 _LEADING_ANSWER = re.compile(
     r"^\s*(?:\(\s*([A-E])\s*\)|([A-E])\s*[\.)]|([A-E])(?=\s*[\r\n]+))(?=\s|$)",
     re.IGNORECASE,
